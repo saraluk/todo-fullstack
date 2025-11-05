@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules
+
+# Configuration files
+.env
+.env.local
+
+# Next.js build output
+.next/
+/frontend/out/
+
+# Backend build output (if you compiled to a 'dist' folder)
+/backend/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
