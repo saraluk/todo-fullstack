@@ -52,24 +52,26 @@ export function TodoForm(props: TodoFormProps) {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <input
-          id="title"
-          type="text"
-          onChange={handleTitleChange}
-          value={title}
-          placeholder="What needs to be done?"
-          className="p-2  border-black border-1 rounded-md text-sm"
-        />
-        <button
-          type="submit"
-          disabled={!title.trim()}
-          onClick={handleAddTodo}
-          className="ml-2 px-4 py-2 bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-sm m"
-        >
-          {isLoading ? "Loading" : "Add"}
-        </button>
+        <div className="flex">
+          <input
+            id="title"
+            type="text"
+            onChange={handleTitleChange}
+            value={title}
+            placeholder="What needs to be done?"
+            className="w-full p-2 border-black border-1 rounded-md text-sm"
+          />
+          <button
+            type="submit"
+            disabled={!title.trim()}
+            onClick={handleAddTodo}
+            className="ml-2 px-4 py-2 bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-sm m"
+          >
+            {isLoading ? "Loading" : "Add"}
+          </button>
+        </div>
       </form>
-      {errorMessage && <p>{errorMessage}</p>}
+      {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
     </div>
   );
 }

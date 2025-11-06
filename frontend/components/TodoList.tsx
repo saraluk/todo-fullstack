@@ -1,8 +1,9 @@
 "use client";
 
+import { useCallback, useState } from "react";
+
 import { Todo } from "@/types/todo";
 import { deleteTodo, updateTodo } from "@/utils/todos";
-import { useCallback, useState } from "react";
 import { TodoForm } from "./TodoForm";
 
 interface TodoListProps {
@@ -63,29 +64,38 @@ export function TodoList(props: TodoListProps) {
     <>
       <TodoForm onSuccess={handleAddTodoSuccess} />
       {todos.length === 0 ? (
-        <p>No tasks yet! Add one above.</p>
+        <p className="mt-4 text-sm text-gray">No tasks yet! Add one above.</p>
       ) : (
         <ul>
           {errorMessage && <p className="color-red">{errorMessage}</p>}
           {todos.map((todo) => (
-            <li key={todo.id}>
-              <input
-                id={todo.id.toString()}
-                type="checkbox"
-                checked={todo.isComplete ?? false}
-                onChange={() => handleToggleComplete(todo)}
-              />
-              <label
-                htmlFor={todo.id.toString()}
-                className={`select-none text-lg ${
-                  todo.isComplete
-                    ? "line-through text-gray-500"
-                    : "text-gray-800"
-                }`}
+            <li
+              key={todo.id}
+              className="flex justify-between items-center py-2 border-b"
+            >
+              <div>
+                <input
+                  id={todo.id.toString()}
+                  type="checkbox"
+                  checked={todo.isComplete ?? false}
+                  onChange={() => handleToggleComplete(todo)}
+                />
+                <label
+                  htmlFor={todo.id.toString()}
+                  className={`ml-2 text-[16px] select-none text-lg ${
+                    todo.isComplete
+                      ? "line-through text-gray-500"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {todo.title}
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDeleteTodo(todo.id)}
+                className="text-red-500"
               >
-                {todo.title}
-              </label>
-              <button type="button" onClick={() => handleDeleteTodo(todo.id)}>
                 Delete
               </button>
             </li>
