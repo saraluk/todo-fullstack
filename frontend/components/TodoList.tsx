@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Todo } from "@/types/todo";
 import { deleteTodo, updateTodo } from "@/utils/todos";
 import { TodoForm } from "./TodoForm";
+import { TodoItem } from "./TodoItem";
 
 interface TodoListProps {
   initialTodos: Todo[];
@@ -79,45 +80,53 @@ export function TodoList(props: TodoListProps) {
     [router]
   );
 
+  const { incompleteTodos, completedTodos } = useMemo(() => {
+    const incomplete: Todo[] = [];
+    const completed: Todo[] = [];
+    const allTodos = Array.from(todosMap.values());
+    for (const todo of allTodos) {
+      if (todo.isComplete) {
+        completed.push(todo);
+      } else {
+        incomplete.push(todo);
+      }
+    }
+
+    return { incompleteTodos: incomplete, completedTodos: completed };
+  }, [todosMap]);
+
   return (
     <>
       <TodoForm onSuccess={handleAddTodoSuccess} />
-      {todosMap.size === 0 ? (
-        <p className="mt-4 text-sm text-gray">No tasks yet! Add one above.</p>
+      <h2 className="font-bold text-md mt-[24px] mb-[4px]">Incomplete todos</h2>
+      {incompleteTodos.length === 0 ? (
+        <p className="text-sm text-gray">No tasks yet! Add one above.</p>
       ) : (
         <ul>
           {errorMessage && <p className="color-red">{errorMessage}</p>}
-          {Array.from(todosMap.values()).map((todo) => (
-            <li
+          {incompleteTodos.map((todo) => (
+            <TodoItem
               key={todo.id}
-              className="flex justify-between items-center py-2 border-b"
-            >
-              <div>
-                <input
-                  id={todo.id.toString()}
-                  type="checkbox"
-                  checked={todo.isComplete ?? false}
-                  onChange={() => handleToggleComplete(todo)}
-                />
-                <label
-                  htmlFor={todo.id.toString()}
-                  className={`ml-2 text-[16px] select-none text-lg ${
-                    todo.isComplete
-                      ? "line-through text-gray-500"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {todo.title}
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleDeleteTodo(todo.id)}
-                className="text-red-500 hover:text-red-700"
-              >
-                Delete
-              </button>
-            </li>
+              todo={todo}
+              onToggleComplete={handleToggleComplete}
+              onDelete={handleDeleteTodo}
+            />
+          ))}
+        </ul>
+      )}
+      <h2 className="font-bold text-md mt-[24px] mb-[4px]">Completed todos</h2>
+      {completedTodos.length === 0 ? (
+        <p className="text-sm text-gray">No completed tasks yet.</p>
+      ) : (
+        <ul>
+          {errorMessage && <p className="color-red">{errorMessage}</p>}
+          {completedTodos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onToggleComplete={handleToggleComplete}
+              onDelete={handleDeleteTodo}
+            />
           ))}
         </ul>
       )}
