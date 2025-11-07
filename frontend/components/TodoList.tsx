@@ -18,29 +18,30 @@ export function TodoList(props: TodoListProps) {
     setTodos((prev) => [...prev, todo]);
   }, []);
 
-  const handleToggleComplete = useCallback(
-    async (todo: Todo) => {
-      const updatedTodo = {
-        ...todo,
-        isComplete: !todo.isComplete,
-      };
+  const handleToggleComplete = useCallback(async (todo: Todo) => {
+    const updatedTodo = {
+      ...todo,
+      isComplete: !todo.isComplete,
+    };
 
-      setErrorMessage("");
-      // Optimistically update the UI state before the API call
-      setTodos(todos.map((t) => (t.id === todo.id ? updatedTodo : t)));
+    setErrorMessage("");
+    // Optimistically update the UI state before the API call
+    setTodos((prevTodos) =>
+      prevTodos.map((t) => (t.id === todo.id ? updatedTodo : t))
+    );
 
-      try {
-        await updateTodo(updatedTodo);
-      } catch (error) {
-        // Revert the state on failure
-        setTodos(todos.map((t) => (t.id === todo.id ? todo : t)));
-        if (error instanceof Error) {
-          setErrorMessage(error.message);
-        }
+    try {
+      await updateTodo(updatedTodo);
+    } catch (error) {
+      // Revert the state on failure
+      setTodos((prevTodos) =>
+        prevTodos.map((t) => (t.id === todo.id ? todo : t))
+      );
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
       }
-    },
-    [todos]
-  );
+    }
+  }, []);
 
   const handleDeleteTodo = useCallback(
     async (id: number) => {
