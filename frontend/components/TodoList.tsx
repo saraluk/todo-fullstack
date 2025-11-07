@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 
 import { Todo } from "@/types/todo";
 import { deleteTodo, updateTodo } from "@/utils/todos";
@@ -11,11 +12,21 @@ interface TodoListProps {
 }
 export function TodoList(props: TodoListProps) {
   const { initialTodos } = props;
-  const [todos, setTodos] = useState(initialTodos);
+  const initialTodoMap = useMemo(() => {
+    return new Map(initialTodos.map((todo) => [todo.id, todo]));
+  }, [initialTodos]);
+
+  const [todosMap, setTodosMap] = useState<Map<number, Todo>>(initialTodoMap);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const router = useRouter();
+
   const handleAddTodoSuccess = useCallback((todo: Todo) => {
-    setTodos((prev) => [...prev, todo]);
+    setTodosMap((prevTodosMap) => {
+      const newTodosMap = new Map(prevTodosMap);
+      newTodosMap.set(todo.id, todo);
+      return newTodosMap;
+    });
   }, []);
 
   const handleToggleComplete = useCallback(async (todo: Todo) => {
@@ -26,17 +37,22 @@ export function TodoList(props: TodoListProps) {
 
     setErrorMessage("");
     // Optimistically update the UI state before the API call
-    setTodos((prevTodos) =>
-      prevTodos.map((t) => (t.id === todo.id ? updatedTodo : t))
-    );
+    setTodosMap((prevTodosMap) => {
+      const newTodosMap = new Map(prevTodosMap);
+      newTodosMap.set(todo.id, updatedTodo);
+      return newTodosMap;
+    });
 
     try {
       await updateTodo(updatedTodo);
     } catch (error) {
       // Revert the state on failure
-      setTodos((prevTodos) =>
-        prevTodos.map((t) => (t.id === todo.id ? todo : t))
-      );
+      setTodosMap((prevTodosMap) => {
+        const newTodosMap = new Map(prevTodosMap);
+        newTodosMap.set(todo.id, todo);
+        return newTodosMap;
+      });
+
       if (error instanceof Error) {
         setErrorMessage(error.message);
       }
@@ -45,31 +61,33 @@ export function TodoList(props: TodoListProps) {
 
   const handleDeleteTodo = useCallback(
     async (id: number) => {
-      const previousTodos = [...todos];
-
       // Optimistically update the UI state
-      setTodos(todos.filter((t) => t.id !== id));
+      setTodosMap((prevTodos) => {
+        const newMap = new Map(prevTodos);
+        newMap.delete(id);
+        return newMap;
+      });
       try {
         await deleteTodo(id);
       } catch (error) {
-        setTodos(previousTodos);
+        router.refresh();
         if (error instanceof Error) {
           setErrorMessage(error.message);
         }
       }
     },
-    [todos]
+    [router]
   );
 
   return (
     <>
       <TodoForm onSuccess={handleAddTodoSuccess} />
-      {todos.length === 0 ? (
+      {todosMap.size === 0 ? (
         <p className="mt-4 text-sm text-gray">No tasks yet! Add one above.</p>
       ) : (
         <ul>
           {errorMessage && <p className="color-red">{errorMessage}</p>}
-          {todos.map((todo) => (
+          {Array.from(todosMap.values()).map((todo) => (
             <li
               key={todo.id}
               className="flex justify-between items-center py-2 border-b"
@@ -95,7 +113,7 @@ export function TodoList(props: TodoListProps) {
               <button
                 type="button"
                 onClick={() => handleDeleteTodo(todo.id)}
-                className="text-red-500"
+                className="text-red-500 hover:text-red-700"
               >
                 Delete
               </button>
