@@ -1,5 +1,5 @@
 import express from "express";
-import * as cors from "cors";
+import cors from "cors";
 
 import { AppDataSource } from "./data-source";
 import todoRoutes from "./api/todos";
