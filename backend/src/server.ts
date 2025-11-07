@@ -1,7 +1,10 @@
-import * as express from "express";
+import express from "express";
 import * as cors from "cors";
+
 import { AppDataSource } from "./data-source";
 import todoRoutes from "./api/todos";
+import authRoutes from "./authRoutes";
+import { authenticateToken } from "./middleware";
 
 // Initialize the Express application
 const app = express();
@@ -18,6 +21,16 @@ async function startServer() {
     console.log("Database connection established successfully.");
 
     // Routes registration
+    // --- 1. AUTH ROUTES (Unprotected) ---
+    app.use("/auth", authRoutes);
+    // --- 2. PROTECT ALL TODO ROUTES ---
+    // Middleware runs first, then a check ensures the repository is ready.
+    app.use("/api/todos", authenticateToken, (req, res, next) => {
+      if (!todoRoutes) {
+        return res.status(503).send("Database service unavailable.");
+      }
+      next();
+    });
     app.use("/api/todos", todoRoutes);
 
     // Start Express server

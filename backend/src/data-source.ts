@@ -1,9 +1,11 @@
 // data source and all connection configuration
 
+import * as dotenv from "dotenv";
 import "reflect-metadata";
 import { DataSource } from "typeorm";
+
 import { Todo } from "./entity/Todo";
-import * as dotenv from "dotenv";
+import { User } from "./entity/User";
 
 // Load environment variables from .env
 dotenv.config();
@@ -14,7 +16,7 @@ export const AppDataSource = new DataSource({
   url: process.env.DATABASE_URL as string,
   synchronize: true,
   logging: false,
-  entities: [Todo], // List of database models (entities)
+  entities: [Todo, User], // List of database models (entities)
   migrations: [],
   subscribers: [],
 });
