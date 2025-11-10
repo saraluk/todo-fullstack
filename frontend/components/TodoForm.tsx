@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 
 import { Todo } from "@/types/todo";
 import { createNewTodo } from "@/utils/todos";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TodoFormProps {
   onSuccess: (todo: Todo) => void;
@@ -9,6 +10,7 @@ interface TodoFormProps {
 
 export function TodoForm(props: TodoFormProps) {
   const { onSuccess } = props;
+  const { isAuthenticated, token } = useAuth();
 
   const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,12 +28,20 @@ export function TodoForm(props: TodoFormProps) {
   const handleAddTodo = useCallback(
     async (event: FormEvent) => {
       event.preventDefault();
+      if (!isAuthenticated || !token) {
+        setIsLoading(false);
+        setErrorMessage(
+          "You are not authenticated. Please login to add a todo."
+        );
+        return;
+      }
+
       if (!title.trim()) return;
 
       setErrorMessage("");
       setIsLoading(true);
       try {
-        const newTodo = await createNewTodo(title);
+        const newTodo = await createNewTodo(token, title);
         if (newTodo) {
           onSuccess(newTodo);
           setTitle("");
@@ -46,7 +56,7 @@ export function TodoForm(props: TodoFormProps) {
         setIsLoading(false);
       }
     },
-    [onSuccess, title]
+    [isAuthenticated, onSuccess, title, token]
   );
 
   return (

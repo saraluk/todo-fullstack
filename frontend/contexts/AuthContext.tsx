@@ -1,10 +1,5 @@
-import { User } from "@/types/user";
-import {
-  clearAuthFromStorage,
-  getStoredToken,
-  getStoredUser,
-  saveAuthToStorage,
-} from "@/utils/auth";
+"use client";
+
 import {
   createContext,
   ReactNode,
@@ -13,6 +8,14 @@ import {
   useMemo,
   useState,
 } from "react";
+
+import { User } from "@/types/user";
+import {
+  clearAuthFromStorage,
+  getStoredToken,
+  getStoredUser,
+  saveAuthToStorage,
+} from "@/utils/auth";
 
 interface AuthContextType {
   user: User | null;

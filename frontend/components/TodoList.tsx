@@ -1,26 +1,57 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { Todo } from "@/types/todo";
-import { deleteTodo, updateTodo } from "@/utils/todos";
+import { deleteTodo, fetchTodos, updateTodo } from "@/utils/todos";
 import { TodoForm } from "./TodoForm";
 import { TodoItem } from "./TodoItem";
 
-interface TodoListProps {
-  initialTodos: Todo[];
-}
-export function TodoList(props: TodoListProps) {
-  const { initialTodos } = props;
-  const initialTodoMap = useMemo(() => {
-    return new Map(initialTodos.map((todo) => [todo.id, todo]));
-  }, [initialTodos]);
+export function TodoList() {
+  const { isAuthenticated, token } = useAuth();
 
-  const [todosMap, setTodosMap] = useState<Map<number, Todo>>(initialTodoMap);
+  const [todosMap, setTodosMap] = useState<Map<number, Todo>>(new Map());
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
+
+  const handleFetchTodos = useCallback(async () => {
+    if (!isAuthenticated || !token) {
+      setIsLoading(false);
+      setErrorMessage(
+        "You are not authenticated. Please login to view your todos."
+      );
+      return;
+    }
+
+    setErrorMessage("");
+    setIsLoading(true);
+    try {
+      const todos = await fetchTodos(token);
+      setTodosMap(new Map(todos.map((todo) => [todo.id, todo])));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "An unknown error fetching todos."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, token]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      handleFetchTodos();
+    } else {
+      // Clear todos if authenticated status changes to false
+      setTodosMap(new Map());
+      setIsLoading(false);
+    }
+  }, [handleFetchTodos, isAuthenticated]);
 
   const handleAddTodoSuccess = useCallback((todo: Todo) => {
     setTodosMap((prevTodosMap) => {
@@ -30,54 +61,71 @@ export function TodoList(props: TodoListProps) {
     });
   }, []);
 
-  const handleToggleComplete = useCallback(async (todo: Todo) => {
-    const updatedTodo = {
-      ...todo,
-      isComplete: !todo.isComplete,
-    };
+  const handleToggleComplete = useCallback(
+    async (todo: Todo) => {
+      if (!isAuthenticated || !token) {
+        setErrorMessage(
+          "You need to be logged in to modify your todos. Please login first."
+        );
+        return;
+      }
 
-    setErrorMessage("");
-    // Optimistically update the UI state before the API call
-    setTodosMap((prevTodosMap) => {
-      const newTodosMap = new Map(prevTodosMap);
-      newTodosMap.set(todo.id, updatedTodo);
-      return newTodosMap;
-    });
+      const updatedTodo = {
+        ...todo,
+        isComplete: !todo.isComplete,
+      };
 
-    try {
-      await updateTodo(updatedTodo);
-    } catch (error) {
-      // Revert the state on failure
+      setErrorMessage("");
+      // Optimistically update the UI state before the API call
       setTodosMap((prevTodosMap) => {
         const newTodosMap = new Map(prevTodosMap);
-        newTodosMap.set(todo.id, todo);
+        newTodosMap.set(todo.id, updatedTodo);
         return newTodosMap;
       });
 
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
+      try {
+        await updateTodo(token, updatedTodo);
+      } catch (error) {
+        // Revert the state on failure
+        setTodosMap((prevTodosMap) => {
+          const newTodosMap = new Map(prevTodosMap);
+          newTodosMap.set(todo.id, todo);
+          return newTodosMap;
+        });
+
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        }
       }
-    }
-  }, []);
+    },
+    [isAuthenticated, token]
+  );
 
   const handleDeleteTodo = useCallback(
     async (id: number) => {
+      if (!isAuthenticated || !token) {
+        setErrorMessage("Please sign in to delete a todo.");
+        return;
+      }
+
+      const prevTodosMap = new Map(todosMap);
       // Optimistically update the UI state
       setTodosMap((prevTodos) => {
         const newMap = new Map(prevTodos);
         newMap.delete(id);
         return newMap;
       });
+
       try {
-        await deleteTodo(id);
+        await deleteTodo(token, id);
       } catch (error) {
-        router.refresh();
         if (error instanceof Error) {
           setErrorMessage(error.message);
+          setTodosMap(prevTodosMap);
         }
       }
     },
-    [router]
+    [isAuthenticated, todosMap, token]
   );
 
   const { incompleteTodos, completedTodos } = useMemo(() => {
@@ -94,6 +142,14 @@ export function TodoList(props: TodoListProps) {
 
     return { incompleteTodos: incomplete, completedTodos: completed };
   }, [todosMap]);
+
+  if (isLoading) {
+    return (
+      <div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <>
