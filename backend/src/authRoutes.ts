@@ -20,7 +20,9 @@ router.post("/register", async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).send("Username and password are required.");
+    return res
+      .status(400)
+      .json({ message: "Username and password are required." });
   }
 
   try {
@@ -46,10 +48,10 @@ router.post("/register", async (req, res) => {
   } catch (error) {
     // Check if the error is due to a unique constraint violation
     if (error.code === "23505") {
-      return res.status(409).send("Username already exists.");
+      return res.status(409).json({ message: "Username already exists." });
     }
     console.error("Registration error:", error);
-    res.status(500).send("Server error during registration.");
+    res.status(500).json({ message: "Server error during registration." });
   }
 });
 
@@ -65,14 +67,14 @@ router.post("/login", async (req, res) => {
     });
 
     if (!user) {
-      return res.status(401).send("Invalid username or password.");
+      return res.status(401).json({ message: "Invalid username or password." });
     }
 
     //  Compare the provided password with the stored hash
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
-      return res.status(401).send("Invalid username or password.");
+      return res.status(401).json({ message: "Invalid username or password." });
     }
 
     // Generate a token
@@ -85,7 +87,7 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     console.error("Login error: ", error);
-    res.status(500).send("Server error during login.");
+    res.status(500).json({ message: "Server error during login." });
   }
 });
 

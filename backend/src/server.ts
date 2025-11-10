@@ -22,7 +22,7 @@ async function startServer() {
 
     // Routes registration
     // --- 1. AUTH ROUTES (Unprotected) ---
-    app.use("/auth", authRoutes);
+    app.use("/api/auth", authRoutes);
     // --- 2. PROTECT ALL TODO ROUTES ---
     // Middleware runs first, then a check ensures the repository is ready.
     app.use("/api/todos", authenticateToken, (req, res, next) => {
