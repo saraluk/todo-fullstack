@@ -51,36 +51,65 @@ export function AuthForm() {
   const title = isRegister ? "Create New Account" : "Sign In";
 
   return (
-    <div>
-      <h2>{title}</h2>
-      {errorMessage && <p>{errorMessage}</p>}
-      <form onSubmit={handleSubmit}>
+    <div className="w-full max-w-sm bg-white shadow-2xl rounded-xl p-8 mx-auto">
+      <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">
+        {title}
+      </h2>
+      {errorMessage && (
+        <div
+          className="bg-red-100 border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+          role="alert"
+        >
+          {errorMessage}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="username">Username</label>
+          <label
+            htmlFor="username"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Username
+          </label>
           <input
             type="text"
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <div>
-          <label htmlFor="password">Password</label>
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Password
+          </label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blug-500 focus:border-blue-500"
           />
         </div>
-        <button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition duration-150 disabled:bg-gray-400"
+        >
           {loading ? "Processing..." : isRegister ? "Register" : "Login"}
         </button>
       </form>
-      <p>
+      <p className="mt-6 text-center text-sm">
         {isRegister ? "Already have an account" : "Don't have an account?"}
-        <button type="button" onClick={() => setIsRegister(!isRegister)}>
+        <button
+          type="button"
+          onClick={() => setIsRegister(!isRegister)}
+          className="text-blue-600 hover:text-blue-800 font-medium ml-1"
+        >
           {isRegister ? "Login here" : "Register here"}
         </button>
       </p>
