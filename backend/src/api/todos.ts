@@ -32,12 +32,32 @@ router.get("/", async (req: Request, res: Response) => {
 // Create a new todo
 router.post("/", async (req: Request, res: Response) => {
   const userId = req.userId;
-  const { title } = req.body;
+  const { title, dueDate } = req.body;
 
   try {
+    let parsedDueDate: Date | null = null;
+    if (dueDate !== undefined && dueDate !== null && dueDate !== "") {
+      parsedDueDate = new Date(dueDate);
+      if (isNaN(parsedDueDate.getTime())) {
+        return res.status(400).json({ message: "Invalid due date" });
+      }
+
+      // Validate due date is in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      parsedDueDate.setHours(0, 0, 0, 0);
+
+      if (parsedDueDate < today) {
+        return res
+          .status(400)
+          .json({ message: "Due date must be in the future" });
+      }
+    }
+
     const newTodo = todoRepository.create({
       title,
       isCompleted: false,
+      dueDate: parsedDueDate,
       userId,
     });
     const result = await todoRepository.save(newTodo);
@@ -51,7 +71,7 @@ router.post("/", async (req: Request, res: Response) => {
 router.put("/:id", async (req: Request, res: Response) => {
   const userId = req.userId;
   const todoId = parseInt(req.params.id);
-  const { title, isCompleted } = req.body;
+  const { title, isCompleted, dueDate } = req.body;
 
   try {
     let todoToUpdate = await todoRepository.findOne({
@@ -59,13 +79,36 @@ router.put("/:id", async (req: Request, res: Response) => {
     });
 
     if (!todoToUpdate) {
-      res.status(404).json({ message: "Todo not found" });
+      return res.status(404).json({ message: "Todo not found" });
     }
 
     if (title !== undefined) todoToUpdate.title = title;
     if (isCompleted !== undefined) todoToUpdate.isCompleted = isCompleted;
+    if (dueDate !== undefined) {
+      if (dueDate === null || dueDate === "") {
+        todoToUpdate.dueDate = null;
+      } else {
+        const parsedDueDate = new Date(dueDate);
+        if (isNaN(parsedDueDate.getTime())) {
+          return res.status(400).json({ message: "Invalid due date" });
+        }
 
-    const result = todoRepository.save(todoToUpdate);
+        // Validate due date is in the future
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        parsedDueDate.setHours(0, 0, 0, 0);
+
+        if (parsedDueDate < today) {
+          return res
+            .status(400)
+            .json({ message: "Due date must be in the future" });
+        }
+
+        todoToUpdate.dueDate = parsedDueDate;
+      }
+    }
+
+    const result = await todoRepository.save(todoToUpdate);
     res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Error updating todo" });

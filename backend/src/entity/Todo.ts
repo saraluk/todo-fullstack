@@ -18,6 +18,9 @@ export class Todo {
   @Column({ default: false })
   isCompleted: boolean;
 
+  @Column({ type: "timestamptz", nullable: true })
+  dueDate: Date | null;
+
   // Foreign Key Column: Holds the ID of the owner
   @Column()
   userId: number;
