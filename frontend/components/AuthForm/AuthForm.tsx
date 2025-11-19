@@ -101,7 +101,7 @@ export function AuthForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition duration-150 disabled:bg-gray-400"
+          className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition duration-150 disabled:bg-gray-400"
         >
           {loading ? "Processing..." : isRegister ? "Register" : "Login"}
         </button>
