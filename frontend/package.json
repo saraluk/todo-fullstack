@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
-    "prepare": "husky",
+    "prepare": "cd .. && npx --yes --prefix frontend husky install frontend/.husky",
     "precommit": "lint-staged"
   },
   "lint-staged": {
