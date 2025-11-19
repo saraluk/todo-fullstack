@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,8 +14,6 @@ export function TodoList() {
   const [todosMap, setTodosMap] = useState<Map<number, Todo>>(new Map());
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-
-  const router = useRouter();
 
   const handleFetchTodos = useCallback(async () => {
     if (!isAuthenticated || !token) {

@@ -41,31 +41,35 @@ describe("AuthForm", () => {
     (fetch as jest.Mock).mockClear();
   });
 
-  it("renders in Register mode by default and allows switching to Login mode", async () => {
+  it("renders in Login mode by default and allows switching to Register mode", async () => {
     const user = userEvent.setup();
     render(<AuthForm />);
 
-    // Check initial state (Register mode)
+    // Check initial state (Login mode)
+    expect(
+      screen.getByRole("heading", { name: /sign in/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /login/i })).toBeInTheDocument();
+
+    // Click the switch button
+    await user.click(screen.getByRole("button", { name: /register here/i }));
+
+    // Check switched state (Register mode)
     expect(
       screen.getByRole("heading", { name: /create new account/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /register/i })
     ).toBeInTheDocument();
-
-    // Click the switch button
-    await user.click(screen.getByRole("button", { name: /login here/i }));
-
-    // Check switched state (Login mode)
-    expect(
-      screen.getByRole("heading", { name: /sign in/i })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /login/i })).toBeInTheDocument();
   });
 
   it("handles successful registration and calls the login function", async () => {
     const user = userEvent.setup();
     render(<AuthForm />);
+
+    // Switch to Register mode first
+    await user.click(screen.getByRole("button", { name: /register here/i }));
+
     const usernameInput = screen.getByLabelText(/username/i);
     const passwordInput = screen.getByLabelText(/password/i);
     const registerButton = screen.getByRole("button", { name: /register/i });
@@ -111,10 +115,9 @@ describe("AuthForm", () => {
   });
 
   it("handles login errors and displays an error message", async () => {
-    // Start in Login mode
+    // Form starts in Login mode by default
     const user = userEvent.setup();
     render(<AuthForm />);
-    await user.click(screen.getByRole("button", { name: /login here/i }));
 
     const usernameInput = screen.getByLabelText(/username/i);
     const passwordInput = screen.getByLabelText(/password/i);

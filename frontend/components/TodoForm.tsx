@@ -15,12 +15,20 @@ export function TodoForm(props: TodoFormProps) {
   const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
   const handleSubmit = useCallback(() => {}, []);
 
   const handleTitleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       setTitle(event.target.value);
+    },
+    []
+  );
+
+  const handleDueDateChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setDueDate(event.target.value);
     },
     []
   );
@@ -38,13 +46,29 @@ export function TodoForm(props: TodoFormProps) {
 
       if (!title.trim()) return;
 
+      // Validate due date is in the future
+      if (dueDate) {
+        const selectedDate = new Date(dueDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (selectedDate < today) {
+          setErrorMessage("Due date must be in the future");
+          return;
+        }
+      }
+
       setErrorMessage("");
       setIsLoading(true);
       try {
-        const newTodo = await createNewTodo(token, title);
+        const newTodo = await createNewTodo(token, {
+          title,
+          dueDate: dueDate || null,
+        });
         if (newTodo) {
           onSuccess(newTodo);
           setTitle("");
+          setDueDate("");
         }
       } catch (error) {
         if (error instanceof Error) {
@@ -56,30 +80,54 @@ export function TodoForm(props: TodoFormProps) {
         setIsLoading(false);
       }
     },
-    [isAuthenticated, onSuccess, title, token]
+    [dueDate, isAuthenticated, onSuccess, title, token]
   );
 
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <div className="flex">
-          <input
-            id="title"
-            type="text"
-            onChange={handleTitleChange}
-            value={title}
-            placeholder="What needs to be done?"
-            className="w-full p-2 border-black border-1 rounded-md text-sm"
-          />
-          <button
-            type="submit"
-            disabled={!title.trim()}
-            onClick={handleAddTodo}
-            className="ml-2 px-4 py-2 bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-sm m"
-          >
-            {isLoading ? "Loading" : "Add"}
-          </button>
+        <div className="flex flex-col gap-3 md:flex-row">
+          <div className="flex-1">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Title
+            </label>
+            <input
+              id="title"
+              type="text"
+              onChange={handleTitleChange}
+              value={title}
+              placeholder="What needs to be done?"
+              className="w-full p-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
+          <div className="flex-1">
+            <label
+              htmlFor="dueDate"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Due date (optional)
+            </label>
+            <input
+              id="dueDate"
+              type="date"
+              value={dueDate}
+              onChange={handleDueDateChange}
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
         </div>
+        <button
+          type="submit"
+          disabled={!title.trim()}
+          onClick={handleAddTodo}
+          className="mt-3 px-4 py-2 bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-sm"
+        >
+          {isLoading ? "Loading" : "Add"}
+        </button>
       </form>
       {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
     </div>

@@ -9,23 +9,34 @@ interface TodoItemProps {
 export function TodoItem(props: TodoItemProps) {
   const { todo, onToggleComplete, onDelete } = props;
 
+  const formattedDueDate =
+    todo.dueDate && !isNaN(Date.parse(todo.dueDate))
+      ? new Date(todo.dueDate).toLocaleDateString()
+      : null;
+
   return (
-    <li className="flex justify-between items-center py-2 border-b">
-      <div>
+    <li className="flex justify-between items-center py-3 border-b gap-4">
+      <div className="flex items-start gap-2">
         <input
           id={todo.id.toString()}
           type="checkbox"
           checked={todo.isComplete ?? false}
           onChange={() => onToggleComplete(todo)}
+          className="mt-1"
         />
-        <label
-          htmlFor={todo.id.toString()}
-          className={`ml-2 text-[16px] select-none text-lg ${
-            todo.isComplete ? "line-through text-gray-500" : "text-gray-800"
-          }`}
-        >
-          {todo.title}
-        </label>
+        <div>
+          <label
+            htmlFor={todo.id.toString()}
+            className={`block text-[16px] select-none text-lg ${
+              todo.isComplete ? "line-through text-gray-500" : "text-gray-800"
+            }`}
+          >
+            {todo.title}
+          </label>
+          {formattedDueDate && (
+            <p className="text-xs text-gray-500">Due {formattedDueDate}</p>
+          )}
+        </div>
       </div>
       <button
         type="button"

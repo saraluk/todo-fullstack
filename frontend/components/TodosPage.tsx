@@ -16,7 +16,7 @@ export function TodosPage() {
       <div className="w-full max-w-md bg-white shadow-xl rounded-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">
-            {authenticatedUser?.username}&apos; s Todos
+            {authenticatedUser?.username}&apos;s Todos
           </h1>
           <button
             onClick={logout}

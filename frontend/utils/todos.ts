@@ -30,7 +30,12 @@ export async function fetchTodos(token: string): Promise<Todo[]> {
   }
 }
 
-export async function createNewTodo(token: string, title: string) {
+export interface CreateTodoPayload {
+  title: string;
+  dueDate?: string | null;
+}
+
+export async function createNewTodo(token: string, payload: CreateTodoPayload) {
   if (!token) {
     console.error("Attempted API call without token.");
     return;
@@ -43,7 +48,13 @@ export async function createNewTodo(token: string, title: string) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({
+        title: payload.title,
+        dueDate:
+          payload.dueDate === undefined || payload.dueDate === ""
+            ? null
+            : payload.dueDate,
+      }),
     });
 
     if (!response.ok) {

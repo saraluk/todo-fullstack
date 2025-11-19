@@ -5,8 +5,9 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useLayoutEffect,
   useMemo,
-  useState,
+  useReducer,
 } from "react";
 
 import { User } from "@/types/user";
@@ -41,29 +42,76 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+type AuthState = {
+  user: User | null;
+  token: string | null;
+};
+
+type AuthAction =
+  | { type: "SET_AUTH"; payload: { token: string; user: User } }
+  | { type: "CLEAR_AUTH" };
+
+function authReducer(state: AuthState, action: AuthAction): AuthState {
+  switch (action.type) {
+    case "SET_AUTH":
+      return {
+        token: action.payload.token,
+        user: action.payload.user,
+      };
+    case "CLEAR_AUTH":
+      return {
+        token: null,
+        user: null,
+      };
+    default:
+      return state;
+  }
+}
+
 export function AuthProvider(props: AuthProviderProps) {
   const { children } = props;
-  const [user, setUser] = useState<User | null>(() => getStoredUser());
-  const [token, setToken] = useState<string | null>(() => getStoredToken());
-  const isAuthenticated = !!user && !!token;
+
+  const [authState, dispatch] = useReducer(authReducer, {
+    user: null,
+    token: null,
+  });
+
+  const isAuthenticated = !!authState.user && !!authState.token;
+
+  // Restore auth from localStorage after initial render (client-side only)
+  // useLayoutEffect runs synchronously after render but before paint, avoiding hydration issues
+  useLayoutEffect(() => {
+    const storedToken = getStoredToken();
+    const storedUser = getStoredUser();
+    if (storedToken && storedUser) {
+      dispatch({
+        type: "SET_AUTH",
+        payload: { token: storedToken, user: storedUser },
+      });
+    }
+  }, []);
 
   // Function to handle successful login (stores token and user)
   const login = useCallback((newToken: string, newUser: User) => {
-    setToken(newToken);
-    setUser(newUser);
+    dispatch({ type: "SET_AUTH", payload: { token: newToken, user: newUser } });
     saveAuthToStorage(newToken, newUser);
   }, []);
 
   // Function to handle logout (clears client state and localStorage)
   const logout = useCallback(() => {
-    setUser(null);
-    setToken(null);
+    dispatch({ type: "CLEAR_AUTH" });
     clearAuthFromStorage();
   }, []);
 
   const contextValue: AuthContextType = useMemo(
-    () => ({ user, token, isAuthenticated, login, logout }),
-    [isAuthenticated, login, logout, token, user]
+    () => ({
+      user: authState.user,
+      token: authState.token,
+      isAuthenticated,
+      login,
+      logout,
+    }),
+    [authState.user, authState.token, isAuthenticated, login, logout]
   );
 
   return (
