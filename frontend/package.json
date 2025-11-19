@@ -19,7 +19,7 @@
     ],
     "*.{ts,tsx}": [
       "bash -c \"tsc --noEmit\" || exit 1",
-      "jest --maxWorkers=1 --findRelatedTests"
+      "jest --config jest.config.js --maxWorkers=1 --findRelatedTests --passWithNoTests"
     ]
   },
   "dependencies": {

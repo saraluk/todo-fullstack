@@ -119,15 +119,15 @@ export function TodoForm(props: TodoFormProps) {
               className="w-full p-2 border border-gray-300 rounded-md text-sm"
             />
           </div>
+          <button
+            type="submit"
+            disabled={!title.trim()}
+            onClick={handleAddTodo}
+            className="mt-2 md:mt-6 px-4 py-2 bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-sm"
+          >
+            {isLoading ? "Loading" : "Add"}
+          </button>
         </div>
-        <button
-          type="submit"
-          disabled={!title.trim()}
-          onClick={handleAddTodo}
-          className="mt-3 px-4 py-2 bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-sm"
-        >
-          {isLoading ? "Loading" : "Add"}
-        </button>
       </form>
       {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
     </div>

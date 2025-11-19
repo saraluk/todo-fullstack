@@ -33,7 +33,7 @@ export function TodoItem(props: TodoItemProps) {
           >
             {todo.title}
           </label>
-          {formattedDueDate && (
+          {formattedDueDate && !todo.isComplete && (
             <p className="text-xs text-gray-500">Due {formattedDueDate}</p>
           )}
         </div>

@@ -13,7 +13,7 @@ export function TodosPage() {
 
   return (
     <main className="w-full bg-gray-50 flex flex-col items-center">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-lg p-8">
+      <div className="w-full max-w-lg bg-white shadow-xl rounded-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">
             {authenticatedUser?.username}&apos;s Todos
