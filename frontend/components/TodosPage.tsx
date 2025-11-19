@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { AuthForm } from "./AuthForm";
+import { AuthForm } from "./AuthForm/AuthForm";
 import { TodoList } from "./TodoList";
 
 export function TodosPage() {

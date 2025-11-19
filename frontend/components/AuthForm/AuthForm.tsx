@@ -74,6 +74,7 @@ export function AuthForm() {
           <input
             type="text"
             id="username"
+            name="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -89,10 +90,12 @@ export function AuthForm() {
           </label>
           <input
             type="password"
+            id="password"
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blug-500 focus:border-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <button
@@ -107,7 +110,7 @@ export function AuthForm() {
         {isRegister ? "Already have an account" : "Don't have an account?"}
         <button
           type="button"
-          onClick={() => setIsRegister(!isRegister)}
+          onClick={() => setIsRegister((prev) => !prev)}
           className="text-blue-600 hover:text-blue-800 font-medium ml-1"
         >
           {isRegister ? "Login here" : "Register here"}
