@@ -1,0 +1,17 @@
+RELATIVE_CWD=$(git rev-parse --show-prefix)
+
+# 1. If we are ALREADY inside the 'frontend' directory (RELATIVE_CWD="frontend/"), 
+# we run the hooks directly using 'npm run precommit'.
+if [ "$RELATIVE_CWD" = "frontend/" ]; then
+  echo "--- Running precommit hooks from frontend/ directory (CWD check) ---"
+  # This command is run from within the frontend directory
+  npm run precommit || exit 1
+fi
+
+# 2. If we are in the ROOT directory (RELATIVE_CWD=""), and frontend files are staged, 
+# dispatch by changing directory (the original monorepo approach).
+if [ "$RELATIVE_CWD" = "" ] && git diff --cached --name-only | grep -q 'frontend/'; then
+  echo "--- Running precommit hooks for staged frontend/ files (dispatching from root) ---"
+  # This command changes to the frontend directory before running the script
+  (cd frontend && npm run precommit) || exit 1
+fi
