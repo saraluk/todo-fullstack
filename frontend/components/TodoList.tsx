@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Todo } from "@/types/todo";
@@ -14,6 +14,7 @@ export function TodoList() {
   const [todosMap, setTodosMap] = useState<Map<number, Todo>>(new Map());
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleFetchTodos = useCallback(async () => {
     if (!isAuthenticated || !token) {
@@ -129,7 +130,15 @@ export function TodoList() {
     const incomplete: Todo[] = [];
     const completed: Todo[] = [];
     const allTodos = Array.from(todosMap.values());
-    for (const todo of allTodos) {
+
+    // Filter todos by search query if provided
+    const filteredTodos = searchQuery.trim()
+      ? allTodos.filter((todo) =>
+          todo.title.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        )
+      : allTodos;
+
+    for (const todo of filteredTodos) {
       if (todo.isComplete) {
         completed.push(todo);
       } else {
@@ -138,7 +147,14 @@ export function TodoList() {
     }
 
     return { incompleteTodos: incomplete, completedTodos: completed };
-  }, [todosMap]);
+  }, [todosMap, searchQuery]);
+
+  const handleSearchChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(event.target.value);
+    },
+    []
+  );
 
   if (isLoading) {
     return (
@@ -151,9 +167,32 @@ export function TodoList() {
   return (
     <>
       <TodoForm onSuccess={handleAddTodoSuccess} />
+
+      {/* Search input */}
+      <div className="mt-6 mb-4">
+        <label
+          htmlFor="search"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Search todos
+        </label>
+        <input
+          id="search"
+          type="text"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          placeholder="Search by title..."
+          className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+
       <h2 className="font-bold text-md mt-[24px] mb-[4px]">Incomplete todos</h2>
       {incompleteTodos.length === 0 ? (
-        <p className="text-sm text-gray">No tasks yet! Add one above.</p>
+        <p className="text-sm text-gray">
+          {searchQuery.trim()
+            ? "No incomplete todos match your search."
+            : "No tasks yet! Add one above."}
+        </p>
       ) : (
         <ul>
           {errorMessage && <p className="color-red">{errorMessage}</p>}
@@ -169,7 +208,11 @@ export function TodoList() {
       )}
       <h2 className="font-bold text-md mt-[24px] mb-[4px]">Completed todos</h2>
       {completedTodos.length === 0 ? (
-        <p className="text-sm text-gray">No completed tasks yet.</p>
+        <p className="text-sm text-gray">
+          {searchQuery.trim()
+            ? "No completed todos match your search."
+            : "No completed tasks yet."}
+        </p>
       ) : (
         <ul>
           {errorMessage && <p className="color-red">{errorMessage}</p>}
