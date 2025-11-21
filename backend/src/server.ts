@@ -24,14 +24,8 @@ async function startServer() {
     // --- 1. AUTH ROUTES (Unprotected) ---
     app.use("/api/auth", authRoutes);
     // --- 2. PROTECT ALL TODO ROUTES ---
-    // Middleware runs first, then a check ensures the repository is ready.
-    app.use("/api/todos", authenticateToken, (req, res, next) => {
-      if (!todoRoutes) {
-        return res.status(503).send("Database service unavailable.");
-      }
-      next();
-    });
-    app.use("/api/todos", todoRoutes);
+    // authenticateToken middleware runs first, then todoRoutes handles the actual routes
+    app.use("/api/todos", authenticateToken, todoRoutes);
 
     // Start Express server
     app.listen(PORT, () => {
