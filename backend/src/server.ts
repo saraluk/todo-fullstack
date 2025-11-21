@@ -18,33 +18,36 @@ const corsOptions = process.env.FRONTEND_URL
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Database initialization and server start function
+// --- HEALTHCHECK ENDPOINT (Public, registered early for monitoring) ---
+// This needs to be available immediately, even before database connects
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Start Express server immediately (before database connection)
+// This allows healthchecks to pass while database is connecting
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}.`);
+});
+
+// Database initialization and route registration
 async function startServer() {
   try {
     await AppDataSource.initialize();
     console.log("Database connection established successfully.");
 
-    // Routes registration
-    // --- 0. HEALTHCHECK ENDPOINT (Public, for monitoring) ---
-    app.get("/health", (_req, res) => {
-      res
-        .status(200)
-        .json({ status: "ok", timestamp: new Date().toISOString() });
-    });
-
+    // Routes registration (after database is connected)
     // --- 1. AUTH ROUTES (Unprotected) ---
     app.use("/api/auth", authRoutes);
     // --- 2. PROTECT ALL TODO ROUTES ---
     // authenticateToken middleware runs first, then todoRoutes handles the actual routes
     app.use("/api/todos", authenticateToken, todoRoutes);
 
-    // Start Express server
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}.`);
-    });
+    console.log("All routes registered successfully.");
   } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
+    console.error("Failed to initialize database:", error);
+    // Don't exit - server is still running, healthcheck will still work
+    // But API routes won't function until database connects
   }
 }
 
