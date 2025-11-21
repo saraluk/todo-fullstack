@@ -25,6 +25,13 @@ async function startServer() {
     console.log("Database connection established successfully.");
 
     // Routes registration
+    // --- 0. HEALTHCHECK ENDPOINT (Public, for monitoring) ---
+    app.get("/health", (_req, res) => {
+      res
+        .status(200)
+        .json({ status: "ok", timestamp: new Date().toISOString() });
+    });
+
     // --- 1. AUTH ROUTES (Unprotected) ---
     app.use("/api/auth", authRoutes);
     // --- 2. PROTECT ALL TODO ROUTES ---
