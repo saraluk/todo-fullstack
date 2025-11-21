@@ -11,7 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware setup
-app.use(cors());
+// CORS - allows all origins (can be restricted in production by setting FRONTEND_URL env var)
+const corsOptions = process.env.FRONTEND_URL
+  ? { origin: process.env.FRONTEND_URL, credentials: true }
+  : {}; // Allow all origins if FRONTEND_URL not set
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Database initialization and server start function
