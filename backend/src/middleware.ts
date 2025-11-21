@@ -27,13 +27,15 @@ export const authenticateToken = (
   const token = authHeader && authHeader.split(" ")[1];
 
   if (token == null) {
-    return res.status(401).send("Access denied. No token provided.");
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
   }
 
   // Verify the token using the secret key
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).send("Invalid or expired token.");
+      return res.status(403).json({ message: "Invalid or expired token." });
     }
 
     req.userId = (user as { userId: number }).userId;
