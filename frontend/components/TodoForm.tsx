@@ -86,7 +86,7 @@ export function TodoForm(props: TodoFormProps) {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-3 md:flex-row">
+        <div className="flex flex-col gap-4 md:flex-row">
           <div className="flex-1">
             <label
               htmlFor="title"
