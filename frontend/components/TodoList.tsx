@@ -5,11 +5,12 @@ import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Todo } from "@/types/todo";
 import { deleteTodo, fetchTodos, updateTodo } from "@/utils/todos";
+import { AuthenticationError } from "@/utils/apiErrors";
 import { TodoForm } from "./TodoForm";
 import { TodoItem } from "./TodoItem";
 
 export function TodoList() {
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, logout } = useAuth();
 
   const [todosMap, setTodosMap] = useState<Map<number, Todo>>(new Map());
   const [errorMessage, setErrorMessage] = useState("");
@@ -31,15 +32,21 @@ export function TodoList() {
       const todos = await fetchTodos(token);
       setTodosMap(new Map(todos.map((todo) => [todo.id, todo])));
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "An unknown error fetching todos."
-      );
+      if (error instanceof AuthenticationError) {
+        // Session expired - logout automatically
+        logout();
+        setErrorMessage("Session expired. Please login again.");
+      } else {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "An unknown error fetching todos."
+        );
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, logout]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -91,12 +98,16 @@ export function TodoList() {
           return newTodosMap;
         });
 
-        if (error instanceof Error) {
+        if (error instanceof AuthenticationError) {
+          // Session expired - logout automatically
+          logout();
+          setErrorMessage("Session expired. Please login again.");
+        } else if (error instanceof Error) {
           setErrorMessage(error.message);
         }
       }
     },
-    [isAuthenticated, token]
+    [isAuthenticated, token, logout]
   );
 
   const handleDeleteTodo = useCallback(
@@ -117,13 +128,18 @@ export function TodoList() {
       try {
         await deleteTodo(token, id);
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof AuthenticationError) {
+          // Session expired - logout automatically
+          logout();
+          setTodosMap(prevTodosMap); // Restore todos
+          setErrorMessage("Session expired. Please login again.");
+        } else if (error instanceof Error) {
           setErrorMessage(error.message);
           setTodosMap(prevTodosMap);
         }
       }
     },
-    [isAuthenticated, todosMap, token]
+    [isAuthenticated, todosMap, token, logout]
   );
 
   const { incompleteTodos, completedTodos } = useMemo(() => {

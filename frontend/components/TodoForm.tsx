@@ -3,6 +3,7 @@ import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { Todo } from "@/types/todo";
 import { createNewTodo } from "@/utils/todos";
 import { useAuth } from "@/contexts/AuthContext";
+import { AuthenticationError } from "@/utils/apiErrors";
 
 interface TodoFormProps {
   onSuccess: (todo: Todo) => void;
@@ -10,7 +11,7 @@ interface TodoFormProps {
 
 export function TodoForm(props: TodoFormProps) {
   const { onSuccess } = props;
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, logout } = useAuth();
 
   const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +72,11 @@ export function TodoForm(props: TodoFormProps) {
           setDueDate("");
         }
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof AuthenticationError) {
+          // Session expired - logout automatically
+          logout();
+          setErrorMessage("Session expired. Please login again.");
+        } else if (error instanceof Error) {
           setErrorMessage(error.message);
         } else {
           setErrorMessage(String(error));
@@ -80,7 +85,7 @@ export function TodoForm(props: TodoFormProps) {
         setIsLoading(false);
       }
     },
-    [dueDate, isAuthenticated, onSuccess, title, token]
+    [dueDate, isAuthenticated, onSuccess, title, token, logout]
   );
 
   return (

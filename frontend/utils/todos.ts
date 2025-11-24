@@ -1,5 +1,6 @@
 import { API_URLS } from "@/constants/apiUrls";
 import { Todo } from "@/types/todo";
+import { handleApiError } from "./apiErrors";
 
 export async function fetchTodos(token: string): Promise<Todo[]> {
   if (!token) {
@@ -16,7 +17,7 @@ export async function fetchTodos(token: string): Promise<Todo[]> {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch todos: ${response.status}`);
+      await handleApiError(response, "Failed to fetch todos");
     }
 
     const todos: Todo[] = await response.json();
@@ -58,7 +59,7 @@ export async function createNewTodo(token: string, payload: CreateTodoPayload) {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to create todo");
+      await handleApiError(response, "Failed to create todo");
     }
 
     const newTodo: Todo = await response.json();
@@ -87,7 +88,7 @@ export async function updateTodo(token: string, todo: Todo) {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to update todo");
+      await handleApiError(response, "Failed to update todo");
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -106,7 +107,7 @@ export async function deleteTodo(token: string, id: number) {
       },
     });
     if (!response.ok) {
-      throw new Error("Failed to delete todo");
+      await handleApiError(response, "Failed to delete todo");
     }
   } catch (error) {
     if (error instanceof Error) {
