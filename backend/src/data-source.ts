@@ -13,10 +13,25 @@ if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
 
+// Select the best available database URL
+// Priority: Private URL (no fees) > Public URL (works) > Standard DATABASE_URL
+const getDatabaseUrl = () => {
+  return (
+    process.env.DATABASE_PRIVATE_URL || // Private endpoint (no fees, preferred)
+    process.env.DATABASE_PUBLIC_URL || // Public endpoint (works, has fees)
+    process.env.RAILWAY_DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
+    ""
+  );
+};
+
+const databaseUrl = getDatabaseUrl();
+
 // Create the configuration for connecting to the database
 export const AppDataSource = new DataSource({
   type: "postgres",
-  url: process.env.DATABASE_URL as string,
+  url: databaseUrl,
   synchronize: true,
   logging: false,
   entities: [Todo, User], // List of database models (entities)
@@ -24,8 +39,9 @@ export const AppDataSource = new DataSource({
   subscribers: [],
   // Railway PostgreSQL connection settings
   extra: {
-    ssl: process.env.DATABASE_URL?.includes("railway")
-      ? { rejectUnauthorized: false }
-      : false,
+    ssl:
+      databaseUrl.includes("railway") || databaseUrl.includes("proxy.railway")
+        ? { rejectUnauthorized: false }
+        : false,
   },
 });

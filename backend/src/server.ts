@@ -79,29 +79,27 @@ async function initializeDatabase(retries = 5, delay = 2000) {
   console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
   console.log("DATABASE_URL length:", process.env.DATABASE_URL?.length || 0);
 
-  // Check for Railway-specific database URL patterns
-  // Try private URL first (no fees), then public URL (works but has fees)
-  const railwayDbUrl =
-    process.env.DATABASE_PRIVATE_URL || // Private endpoint (no fees, preferred)
-    process.env.DATABASE_PUBLIC_URL || // Public endpoint (works, has fees)
-    process.env.RAILWAY_DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.DATABASE_URL;
-
-  const DATABASE_URL = railwayDbUrl;
-
-  // Log which URL we're using
-  if (process.env.DATABASE_PUBLIC_URL) {
+  // Log which URL we're using (DataSource will select the best one)
+  if (process.env.DATABASE_PRIVATE_URL) {
+    console.log("✅ Using DATABASE_PRIVATE_URL (private endpoint - no fees)");
+  } else if (process.env.DATABASE_PUBLIC_URL) {
     console.log(
       "⚠️ Using DATABASE_PUBLIC_URL (public endpoint - may incur egress fees)"
     );
-  } else if (process.env.DATABASE_PRIVATE_URL) {
-    console.log("✅ Using DATABASE_PRIVATE_URL (private endpoint - no fees)");
   } else {
     console.log("ℹ️ Using standard DATABASE_URL");
   }
 
-  if (!DATABASE_URL) {
+  // Check if we have a database URL (DataSource will use the selected one)
+  const hasDbUrl = !!(
+    process.env.DATABASE_PRIVATE_URL ||
+    process.env.DATABASE_PUBLIC_URL ||
+    process.env.RAILWAY_DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL
+  );
+
+  if (!hasDbUrl) {
     console.error("❌ DATABASE_URL environment variable is not set!");
     console.error("Please set DATABASE_URL in Railway environment variables.");
     console.error(
@@ -112,7 +110,12 @@ async function initializeDatabase(retries = 5, delay = 2000) {
   }
 
   console.log("🔄 Initializing database connection...");
-  console.log(`Database URL: ${DATABASE_URL.substring(0, 30)}...`);
+  const dbUrl =
+    process.env.DATABASE_PRIVATE_URL ||
+    process.env.DATABASE_PUBLIC_URL ||
+    process.env.DATABASE_URL ||
+    "not set";
+  console.log(`Database URL: ${dbUrl.substring(0, 50)}...`);
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
