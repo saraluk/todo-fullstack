@@ -79,7 +79,27 @@ async function initializeDatabase(retries = 5, delay = 2000) {
   console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
   console.log("DATABASE_URL length:", process.env.DATABASE_URL?.length || 0);
 
-  const DATABASE_URL = process.env.DATABASE_URL;
+  // Check for Railway-specific database URL patterns
+  // Try private URL first (no fees), then public URL (works but has fees)
+  const railwayDbUrl =
+    process.env.DATABASE_PRIVATE_URL || // Private endpoint (no fees, preferred)
+    process.env.DATABASE_PUBLIC_URL || // Public endpoint (works, has fees)
+    process.env.RAILWAY_DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL;
+
+  const DATABASE_URL = railwayDbUrl;
+
+  // Log which URL we're using
+  if (process.env.DATABASE_PUBLIC_URL) {
+    console.log(
+      "⚠️ Using DATABASE_PUBLIC_URL (public endpoint - may incur egress fees)"
+    );
+  } else if (process.env.DATABASE_PRIVATE_URL) {
+    console.log("✅ Using DATABASE_PRIVATE_URL (private endpoint - no fees)");
+  } else {
+    console.log("ℹ️ Using standard DATABASE_URL");
+  }
 
   if (!DATABASE_URL) {
     console.error("❌ DATABASE_URL environment variable is not set!");
