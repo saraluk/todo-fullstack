@@ -13,13 +13,14 @@ declare global {
 
 const router = express.Router();
 
-const todoRepository = AppDataSource.getRepository(Todo);
+// Lazy repository access - only get repository when needed (after DB is initialized)
+const getTodoRepository = () => AppDataSource.getRepository(Todo);
 
 // Get all todos
 router.get("/", async (req: Request, res: Response) => {
   const userId = req.userId;
   try {
-    const todos = await todoRepository.find({
+    const todos = await getTodoRepository().find({
       where: { userId },
       order: { id: "DESC" },
     });
@@ -54,13 +55,13 @@ router.post("/", async (req: Request, res: Response) => {
       }
     }
 
-    const newTodo = todoRepository.create({
+    const newTodo = getTodoRepository().create({
       title,
       isCompleted: false,
       dueDate: parsedDueDate,
       userId,
     });
-    const result = await todoRepository.save(newTodo);
+    const result = await getTodoRepository().save(newTodo);
     res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ message: "Error creating todo" });
@@ -74,7 +75,7 @@ router.put("/:id", async (req: Request, res: Response) => {
   const { title, isCompleted } = req.body;
 
   try {
-    let todoToUpdate = await todoRepository.findOne({
+    let todoToUpdate = await getTodoRepository().findOne({
       where: { id: todoId, userId },
     });
 
@@ -85,7 +86,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     if (title !== undefined) todoToUpdate.title = title;
     if (isCompleted !== undefined) todoToUpdate.isCompleted = isCompleted;
 
-    const result = await todoRepository.save(todoToUpdate);
+    const result = await getTodoRepository().save(todoToUpdate);
     res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Error updating todo" });
@@ -98,7 +99,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
   const todoId = parseInt(req.params.id);
 
   try {
-    const todoToDelete = await todoRepository.findOne({
+    const todoToDelete = await getTodoRepository().findOne({
       where: { id: todoId, userId },
     });
 
@@ -106,7 +107,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Todo not found" });
     }
 
-    await todoRepository.remove(todoToDelete);
+    await getTodoRepository().remove(todoToDelete);
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: "Error deleting todo" });

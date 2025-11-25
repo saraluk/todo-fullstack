@@ -8,7 +8,8 @@ import { User } from "./entity/User";
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const userRepository = AppDataSource.getRepository(User);
+// Lazy repository access - only get repository when needed (after DB is initialized)
+const getUserRepository = () => AppDataSource.getRepository(User);
 
 // Helper function to generate JWT
 const generateToken = (userId: number): string => {
@@ -31,11 +32,11 @@ router.post("/register", async (req, res) => {
     const password_hash = await bcrypt.hash(password, salt);
 
     // Insert the new user using TypeORM
-    const newUser = userRepository.create({
+    const newUser = getUserRepository().create({
       username,
       password_hash,
     });
-    const savedUser = await userRepository.save(newUser);
+    const savedUser = await getUserRepository().save(newUser);
 
     // Generate a token for immediate login
     const token = generateToken(savedUser.id);
@@ -61,7 +62,7 @@ router.post("/login", async (req, res) => {
 
   try {
     // Find the user by username, explicitly selecting the password hash
-    const user = await userRepository.findOne({
+    const user = await getUserRepository().findOne({
       where: { username },
       select: ["id", "password_hash", "username"],
     });
