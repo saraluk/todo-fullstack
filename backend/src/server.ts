@@ -47,6 +47,12 @@ app.use("/api/todos", authenticateToken, todoRoutes);
 // Start Express server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
+  console.log(`Environment variables check:`);
+  console.log(
+    `- DATABASE_URL: ${process.env.DATABASE_URL ? "SET" : "NOT SET"}`
+  );
+  console.log(`- JWT_SECRET: ${process.env.JWT_SECRET ? "SET" : "NOT SET"}`);
+  console.log(`- NODE_ENV: ${process.env.NODE_ENV || "not set"}`);
 });
 
 // Handle server errors
@@ -61,16 +67,32 @@ process.on("unhandledRejection", (reason: unknown) => {
 
 // Database initialization with retry logic
 async function initializeDatabase(retries = 5, delay = 2000) {
+  // Debug: Log all environment variables (without sensitive data)
+  console.log("=== Environment Variables Debug ===");
+  console.log(
+    "All env vars:",
+    Object.keys(process.env).filter(
+      (key) =>
+        key.includes("DATABASE") || key.includes("JWT") || key.includes("NODE")
+    )
+  );
+  console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
+  console.log("DATABASE_URL length:", process.env.DATABASE_URL?.length || 0);
+
   const DATABASE_URL = process.env.DATABASE_URL;
 
   if (!DATABASE_URL) {
     console.error("❌ DATABASE_URL environment variable is not set!");
     console.error("Please set DATABASE_URL in Railway environment variables.");
+    console.error(
+      "Current process.env keys:",
+      Object.keys(process.env).slice(0, 20)
+    );
     return;
   }
 
   console.log("🔄 Initializing database connection...");
-  console.log(`Database URL: ${DATABASE_URL.substring(0, 20)}...`);
+  console.log(`Database URL: ${DATABASE_URL.substring(0, 30)}...`);
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {

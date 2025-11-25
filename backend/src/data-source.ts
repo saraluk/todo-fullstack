@@ -7,8 +7,11 @@ import { DataSource } from "typeorm";
 import { Todo } from "./entity/Todo";
 import { User } from "./entity/User";
 
-// Load environment variables from .env
-dotenv.config();
+// Load environment variables from .env (only in development)
+// In production (Railway), environment variables are set directly
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 // Create the configuration for connecting to the database
 export const AppDataSource = new DataSource({
@@ -19,4 +22,10 @@ export const AppDataSource = new DataSource({
   entities: [Todo, User], // List of database models (entities)
   migrations: [],
   subscribers: [],
+  // Railway PostgreSQL connection settings
+  extra: {
+    ssl: process.env.DATABASE_URL?.includes("railway")
+      ? { rejectUnauthorized: false }
+      : false,
+  },
 });
