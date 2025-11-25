@@ -31,11 +31,8 @@ const corsOptions = process.env.FRONTEND_URL
     };
 
 // Apply CORS middleware - must be before routes
+// CORS middleware automatically handles OPTIONS preflight requests
 app.use(cors(corsOptions));
-
-// Handle OPTIONS requests explicitly (backup in case CORS middleware doesn't catch it)
-app.options("*", cors(corsOptions));
-
 app.use(express.json());
 
 // --- HEALTHCHECK ENDPOINT (Public, registered early for monitoring) ---
