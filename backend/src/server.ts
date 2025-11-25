@@ -15,22 +15,25 @@ const PORT = process.env.PORT || 4000;
 // Allow all origins for now (can restrict with FRONTEND_URL env var later)
 app.use(
   cors({
-    origin: "*", // Allow all origins - change to specific URL in production
+    origin: "*", // Allow all origins for now, change to specific URL in production
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: false, // Set to false when using origin: "*"
+    credentials: false,
   })
 );
-
-// Log CORS configuration on startup
-console.log(`CORS configured - allowing all origins`);
 
 app.use(express.json());
 
 // --- HEALTHCHECK ENDPOINT (Public, registered early for monitoring) ---
 // This needs to be available immediately, even before database connects
 app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  const dbStatus = AppDataSource.isInitialized ? "connected" : "disconnected";
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    database: dbStatus,
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
+  });
 });
 
 // Register routes immediately (before database connection)
@@ -56,16 +59,41 @@ process.on("unhandledRejection", (reason: unknown) => {
   console.error("Unhandled Rejection:", reason);
 });
 
-// Database initialization (happens in background)
-async function initializeDatabase() {
-  try {
-    console.log("Initializing database connection...");
-    await AppDataSource.initialize();
-    console.log("Database connection established successfully.");
-  } catch (error) {
-    console.error("Failed to initialize database:", error);
-    // Don't exit - server is still running, routes are registered
-    // Routes will return 500 errors until database connects
+// Database initialization with retry logic
+async function initializeDatabase(retries = 5, delay = 2000) {
+  const DATABASE_URL = process.env.DATABASE_URL;
+
+  if (!DATABASE_URL) {
+    console.error("❌ DATABASE_URL environment variable is not set!");
+    console.error("Please set DATABASE_URL in Railway environment variables.");
+    return;
+  }
+
+  console.log("🔄 Initializing database connection...");
+  console.log(`Database URL: ${DATABASE_URL.substring(0, 20)}...`);
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await AppDataSource.initialize();
+      console.log("✅ Database connection established successfully.");
+      return;
+    } catch (error) {
+      console.error(
+        `❌ Database connection attempt ${attempt}/${retries} failed:`,
+        error
+      );
+
+      if (attempt < retries) {
+        console.log(`⏳ Retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      } else {
+        console.error("❌ Failed to initialize database after all retries.");
+        console.error("Error details:", error);
+        // Don't exit - server is still running, routes are registered
+        // Routes will return 503 errors until database connects
+      }
+    }
   }
 }
 
