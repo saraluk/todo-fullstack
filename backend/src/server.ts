@@ -11,28 +11,20 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware setup
-// CORS - allows all origins by default, or specific frontend URL if set
-const corsOptions = process.env.FRONTEND_URL
-  ? {
-      origin: process.env.FRONTEND_URL,
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-      preflightContinue: false,
-      optionsSuccessStatus: 204,
-    }
-  : {
-      origin: true, // Allow all origins
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-      preflightContinue: false,
-      optionsSuccessStatus: 204,
-    };
+// CORS - simple configuration that definitely works
+// Allow all origins for now (can restrict with FRONTEND_URL env var later)
+app.use(
+  cors({
+    origin: "*", // Allow all origins - change to specific URL in production
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false, // Set to false when using origin: "*"
+  })
+);
 
-// Apply CORS middleware - must be before routes
-// CORS middleware automatically handles OPTIONS preflight requests
-app.use(cors(corsOptions));
+// Log CORS configuration on startup
+console.log(`CORS configured - allowing all origins`);
+
 app.use(express.json());
 
 // --- HEALTHCHECK ENDPOINT (Public, registered early for monitoring) ---
@@ -51,9 +43,7 @@ app.use("/api/todos", authenticateToken, todoRoutes);
 
 // Start Express server
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}.`);
-  console.log(`✅ Healthcheck available at: http://localhost:${PORT}/health`);
-  console.log(`✅ Routes registered: /api/auth, /api/todos`);
+  console.log(`Server is running on port ${PORT}.`);
 });
 
 // Handle server errors
