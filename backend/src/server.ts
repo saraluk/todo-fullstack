@@ -11,10 +11,20 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware setup
-// CORS - allows all origins (can be restricted in production by setting FRONTEND_URL env var)
+// CORS - allows all origins in development, or specific frontend URL in production
 const corsOptions = process.env.FRONTEND_URL
-  ? { origin: process.env.FRONTEND_URL, credentials: true }
-  : {}; // Allow all origins if FRONTEND_URL not set
+  ? {
+      origin: process.env.FRONTEND_URL,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    }
+  : {
+      origin: true, // Allow all origins in development
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    };
 app.use(cors(corsOptions));
 app.use(express.json());
 
