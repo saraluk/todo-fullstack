@@ -14,7 +14,14 @@ declare global {
 const router = express.Router();
 
 // Lazy repository access - only get repository when needed (after DB is initialized)
-const getTodoRepository = () => AppDataSource.getRepository(Todo);
+const getTodoRepository = () => {
+  if (!AppDataSource.isInitialized) {
+    throw new Error(
+      "Database not initialized yet. Please wait a moment and try again."
+    );
+  }
+  return AppDataSource.getRepository(Todo);
+};
 
 // Get all todos
 router.get("/", async (req: Request, res: Response) => {

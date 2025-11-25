@@ -9,10 +9,20 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Lazy repository access - only get repository when needed (after DB is initialized)
-const getUserRepository = () => AppDataSource.getRepository(User);
+const getUserRepository = () => {
+  if (!AppDataSource.isInitialized) {
+    throw new Error(
+      "Database not initialized yet. Please wait a moment and try again."
+    );
+  }
+  return AppDataSource.getRepository(User);
+};
 
 // Helper function to generate JWT
 const generateToken = (userId: number): string => {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1d" });
 };
 
@@ -47,6 +57,15 @@ router.post("/register", async (req, res) => {
       token,
     });
   } catch (error) {
+    // Check if the error is due to database not being initialized
+    if (
+      error instanceof Error &&
+      error.message.includes("Database not initialized")
+    ) {
+      return res.status(503).json({
+        message: "Database is connecting. Please try again in a moment.",
+      });
+    }
     // Check if the error is due to a unique constraint violation
     if (error.code === "23505") {
       return res.status(409).json({ message: "Username already exists." });
@@ -87,6 +106,22 @@ router.post("/login", async (req, res) => {
       token,
     });
   } catch (error) {
+    // Check if the error is due to database not being initialized
+    if (
+      error instanceof Error &&
+      error.message.includes("Database not initialized")
+    ) {
+      return res.status(503).json({
+        message: "Database is connecting. Please try again in a moment.",
+      });
+    }
+    // Check if JWT_SECRET is missing
+    if (error instanceof Error && error.message.includes("JWT_SECRET")) {
+      console.error("JWT_SECRET missing:", error);
+      return res.status(500).json({
+        message: "Server configuration error. Please contact support.",
+      });
+    }
     console.error("Login error: ", error);
     res.status(500).json({ message: "Server error during login." });
   }
