@@ -59,6 +59,34 @@ export function TodoList() {
     }
   }, [handleFetchTodos, isAuthenticated]);
 
+  const { todosBasedOnSearchQuery, incompleteTodos, completedTodos } =
+    useMemo(() => {
+      const incomplete: Todo[] = [];
+      const completed: Todo[] = [];
+      const allTodos = Array.from(todosMap.values());
+
+      // Filter todos by search query if provided
+      const filteredTodos = searchQuery.trim()
+        ? allTodos.filter((todo) =>
+            todo.title.toLowerCase().includes(searchQuery.toLowerCase().trim())
+          )
+        : allTodos;
+
+      for (const todo of filteredTodos) {
+        if (todo.isComplete) {
+          completed.push(todo);
+        } else {
+          incomplete.push(todo);
+        }
+      }
+
+      return {
+        todosBasedOnSearchQuery: filteredTodos,
+        incompleteTodos: incomplete,
+        completedTodos: completed,
+      };
+    }, [todosMap, searchQuery]);
+
   const handleAddTodoSuccess = useCallback((todo: Todo) => {
     setTodosMap((prevTodosMap) => {
       const newTodosMap = new Map(prevTodosMap);
@@ -143,7 +171,7 @@ export function TodoList() {
     [isAuthenticated, todosMap, token, logout]
   );
 
-  const handleSelectTodoToBeDeleted = useCallback(
+  const handleSelectTodos = useCallback(
     (id: number) => {
       const newselectedTodos = new Set(selectedTodos);
       if (newselectedTodos.has(id)) {
@@ -158,35 +186,12 @@ export function TodoList() {
   );
 
   const handleSelectAll = () => {
-    setSelectedTodos(new Set(todosMap.keys()));
+    setSelectedTodos(new Set(todosBasedOnSearchQuery.map((todo) => todo.id)));
   };
 
   const handleUnselectAll = () => {
     setSelectedTodos(new Set());
   };
-
-  const { incompleteTodos, completedTodos } = useMemo(() => {
-    const incomplete: Todo[] = [];
-    const completed: Todo[] = [];
-    const allTodos = Array.from(todosMap.values());
-
-    // Filter todos by search query if provided
-    const filteredTodos = searchQuery.trim()
-      ? allTodos.filter((todo) =>
-          todo.title.toLowerCase().includes(searchQuery.toLowerCase().trim())
-        )
-      : allTodos;
-
-    for (const todo of filteredTodos) {
-      if (todo.isComplete) {
-        completed.push(todo);
-      } else {
-        incomplete.push(todo);
-      }
-    }
-
-    return { incompleteTodos: incomplete, completedTodos: completed };
-  }, [todosMap, searchQuery]);
 
   const handleSearchChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -272,8 +277,8 @@ export function TodoList() {
               todo={todo}
               onToggleComplete={handleToggleComplete}
               onDelete={handleDeleteTodo}
-              onSelectToBeDeleted={handleSelectTodoToBeDeleted}
-              isSelectedToBeDeleted={selectedTodos.has(todo.id)}
+              onSelect={handleSelectTodos}
+              isSelected={selectedTodos.has(todo.id)}
             />
           ))}
         </ul>
@@ -294,8 +299,8 @@ export function TodoList() {
               todo={todo}
               onToggleComplete={handleToggleComplete}
               onDelete={handleDeleteTodo}
-              onSelectToBeDeleted={handleSelectTodoToBeDeleted}
-              isSelectedToBeDeleted={selectedTodos.has(todo.id)}
+              onSelect={handleSelectTodos}
+              isSelected={selectedTodos.has(todo.id)}
             />
           ))}
         </ul>

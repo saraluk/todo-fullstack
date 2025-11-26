@@ -4,18 +4,12 @@ interface TodoItemProps {
   todo: Todo;
   onToggleComplete: (todo: Todo) => void;
   onDelete: (id: number) => void;
-  onSelectToBeDeleted: (id: number) => void;
-  isSelectedToBeDeleted: boolean;
+  onSelect: (id: number) => void;
+  isSelected: boolean;
 }
 
 export function TodoItem(props: TodoItemProps) {
-  const {
-    todo,
-    onToggleComplete,
-    onDelete,
-    onSelectToBeDeleted,
-    isSelectedToBeDeleted,
-  } = props;
+  const { todo, onToggleComplete, onDelete, onSelect, isSelected } = props;
 
   const formattedDueDate =
     todo.dueDate && !isNaN(Date.parse(todo.dueDate))
@@ -28,8 +22,8 @@ export function TodoItem(props: TodoItemProps) {
         <input
           id={todo.id.toString()}
           type="checkbox"
-          checked={isSelectedToBeDeleted ?? false}
-          onChange={() => onSelectToBeDeleted(todo.id)}
+          checked={isSelected ?? false}
+          onChange={() => onSelect(todo.id)}
           className="mt-1 cursor-pointer"
         />
         <div>
