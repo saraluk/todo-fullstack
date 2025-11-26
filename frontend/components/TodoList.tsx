@@ -224,16 +224,38 @@ export function TodoList() {
           className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
-      <button type="button" onClick={handleSelectAll}>
-        Select All
-      </button>
-      <button type="button" onClick={handleUnselectAll}>
-        Unselect All
-      </button>
-      {selectedTodos.size > 0 && <button type="button">Delete</button>}
-      {selectedTodos.size > 0 && (
-        <button type="button">Mark as Complete</button>
-      )}
+      <div className="flex items-center gap-[8px] flex-wrap">
+        <button
+          type="button"
+          onClick={handleSelectAll}
+          className="px-[10px] py-[4px] bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-[12px] cursor-pointer"
+        >
+          Select All
+        </button>
+        <button
+          type="button"
+          onClick={handleUnselectAll}
+          className="px-[10px] py-[4px] bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-[12px] cursor-pointer"
+          disabled={selectedTodos.size === 0}
+        >
+          Unselect All
+        </button>
+        <button
+          type="button"
+          className="px-[10px] py-[4px] bg-red-500 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-[12px] cursor-pointer"
+          disabled={selectedTodos.size === 0}
+        >
+          Delete
+        </button>
+        <button
+          type="button"
+          className="px-[10px] py-[4px] bg-green-500 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-[12px] cursor-pointer"
+          disabled={selectedTodos.size === 0}
+        >
+          Mark as Complete
+        </button>
+      </div>
+
       <h2 className="font-bold text-md mt-[24px] mb-[4px]">Incomplete todos</h2>
       {incompleteTodos.length === 0 ? (
         <p className="text-sm text-gray">
