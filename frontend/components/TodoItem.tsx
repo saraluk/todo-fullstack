@@ -4,10 +4,18 @@ interface TodoItemProps {
   todo: Todo;
   onToggleComplete: (todo: Todo) => void;
   onDelete: (id: number) => void;
+  onSelectToBeDeleted: (id: number) => void;
+  isSelectedToBeDeleted: boolean;
 }
 
 export function TodoItem(props: TodoItemProps) {
-  const { todo, onToggleComplete, onDelete } = props;
+  const {
+    todo,
+    onToggleComplete,
+    onDelete,
+    onSelectToBeDeleted,
+    isSelectedToBeDeleted,
+  } = props;
 
   const formattedDueDate =
     todo.dueDate && !isNaN(Date.parse(todo.dueDate))
@@ -20,9 +28,9 @@ export function TodoItem(props: TodoItemProps) {
         <input
           id={todo.id.toString()}
           type="checkbox"
-          checked={todo.isComplete ?? false}
-          onChange={() => onToggleComplete(todo)}
-          className="mt-1"
+          checked={isSelectedToBeDeleted ?? false}
+          onChange={() => onSelectToBeDeleted(todo.id)}
+          className="mt-1 cursor-pointer"
         />
         <div>
           <label
@@ -38,13 +46,22 @@ export function TodoItem(props: TodoItemProps) {
           )}
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => onDelete(todo.id)}
-        className="text-sm text-red-500 hover:text-red-700 py-[4px]"
-      >
-        Delete
-      </button>
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          className="text-sm text-blue-500 hover:text-blue-700 py-[4px] cursor-pointer"
+          onClick={() => onToggleComplete(todo)}
+        >
+          {todo.isComplete ? "Unmark as complete" : "Mark as complete"}
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(todo.id)}
+          className="text-sm text-red-500 hover:text-red-700 py-[4px] cursor-pointer"
+        >
+          Delete
+        </button>
+      </div>
     </li>
   );
 }

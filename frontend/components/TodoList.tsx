@@ -13,6 +13,7 @@ export function TodoList() {
   const { isAuthenticated, token, logout } = useAuth();
 
   const [todosMap, setTodosMap] = useState<Map<number, Todo>>(new Map());
+  const [selectedTodos, setSelectedTodos] = useState<Set<number>>(new Set());
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -142,6 +143,28 @@ export function TodoList() {
     [isAuthenticated, todosMap, token, logout]
   );
 
+  const handleSelectTodoToBeDeleted = useCallback(
+    (id: number) => {
+      const newselectedTodos = new Set(selectedTodos);
+      if (newselectedTodos.has(id)) {
+        newselectedTodos.delete(id);
+        setSelectedTodos(newselectedTodos);
+      } else {
+        newselectedTodos.add(id);
+        setSelectedTodos(newselectedTodos);
+      }
+    },
+    [selectedTodos]
+  );
+
+  const handleSelectAll = () => {
+    setSelectedTodos(new Set(todosMap.keys()));
+  };
+
+  const handleUnselectAll = () => {
+    setSelectedTodos(new Set());
+  };
+
   const { incompleteTodos, completedTodos } = useMemo(() => {
     const incomplete: Todo[] = [];
     const completed: Todo[] = [];
@@ -201,7 +224,16 @@ export function TodoList() {
           className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
-
+      <button type="button" onClick={handleSelectAll}>
+        Select All
+      </button>
+      <button type="button" onClick={handleUnselectAll}>
+        Unselect All
+      </button>
+      {selectedTodos.size > 0 && <button type="button">Delete</button>}
+      {selectedTodos.size > 0 && (
+        <button type="button">Mark as Complete</button>
+      )}
       <h2 className="font-bold text-md mt-[24px] mb-[4px]">Incomplete todos</h2>
       {incompleteTodos.length === 0 ? (
         <p className="text-sm text-gray">
@@ -218,6 +250,8 @@ export function TodoList() {
               todo={todo}
               onToggleComplete={handleToggleComplete}
               onDelete={handleDeleteTodo}
+              onSelectToBeDeleted={handleSelectTodoToBeDeleted}
+              isSelectedToBeDeleted={selectedTodos.has(todo.id)}
             />
           ))}
         </ul>
@@ -238,6 +272,8 @@ export function TodoList() {
               todo={todo}
               onToggleComplete={handleToggleComplete}
               onDelete={handleDeleteTodo}
+              onSelectToBeDeleted={handleSelectTodoToBeDeleted}
+              isSelectedToBeDeleted={selectedTodos.has(todo.id)}
             />
           ))}
         </ul>
