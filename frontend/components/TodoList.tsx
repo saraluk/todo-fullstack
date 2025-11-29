@@ -4,8 +4,8 @@ import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Todo } from "@/types/todo";
-import { deleteTodo, fetchTodos, updateTodo } from "@/utils/todos";
 import { AuthenticationError } from "@/utils/apiErrors";
+import { deleteTodosInOrder, fetchTodos, updateTodo } from "@/utils/todos";
 import { TodoForm } from "./TodoForm";
 import { TodoItem } from "./TodoItem";
 
@@ -140,7 +140,7 @@ export function TodoList() {
   );
 
   const handleDeleteTodo = useCallback(
-    async (id: number) => {
+    async (selectedTodoIds: number[]) => {
       if (!isAuthenticated || !token) {
         setErrorMessage("Please sign in to delete a todo.");
         return;
@@ -150,12 +150,12 @@ export function TodoList() {
       // Optimistically update the UI state
       setTodosMap((prevTodos) => {
         const newMap = new Map(prevTodos);
-        newMap.delete(id);
+        selectedTodoIds.forEach((id) => newMap.delete(id));
         return newMap;
       });
 
       try {
-        await deleteTodo(token, id);
+        await deleteTodosInOrder(token, selectedTodoIds);
       } catch (error) {
         if (error instanceof AuthenticationError) {
           // Session expired - logout automatically
@@ -245,19 +245,14 @@ export function TodoList() {
         >
           Unselect All
         </button>
+        {/** TODO: Wire bulk delete button, handle batching for smaller API calls, retries, and rate-limit control with optimistic updates and rollback if errors */}
         <button
           type="button"
           className="px-[10px] py-[4px] bg-red-500 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-[12px] cursor-pointer"
           disabled={selectedTodos.size === 0}
+          onClick={() => handleDeleteTodo(Array.from(selectedTodos))}
         >
           Delete
-        </button>
-        <button
-          type="button"
-          className="px-[10px] py-[4px] bg-green-500 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 rounded-md text-white text-[12px] cursor-pointer"
-          disabled={selectedTodos.size === 0}
-        >
-          Mark as Complete
         </button>
       </div>
 

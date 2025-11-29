@@ -3,7 +3,7 @@ import { Todo } from "@/types/todo";
 interface TodoItemProps {
   todo: Todo;
   onToggleComplete: (todo: Todo) => void;
-  onDelete: (id: number) => void;
+  onDelete: (ids: number[]) => void;
   onSelect: (id: number) => void;
   isSelected: boolean;
 }
@@ -50,7 +50,7 @@ export function TodoItem(props: TodoItemProps) {
         </button>
         <button
           type="button"
-          onClick={() => onDelete(todo.id)}
+          onClick={() => onDelete([todo.id])}
           className="text-sm text-red-500 hover:text-red-700 py-[4px] cursor-pointer"
         >
           Delete

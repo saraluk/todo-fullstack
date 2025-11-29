@@ -97,7 +97,7 @@ export async function updateTodo(token: string, todo: Todo) {
   }
 }
 
-export async function deleteTodo(token: string, id: number) {
+export async function deleteTodo(token: string, id: number, retries = 2) {
   try {
     const response = await fetch(`${API_URLS.TODOS}/${id}`, {
       method: "DELETE",
@@ -110,8 +110,45 @@ export async function deleteTodo(token: string, id: number) {
       await handleApiError(response, "Failed to delete todo");
     }
   } catch (error) {
+    if (retries > 0) {
+      return deleteTodo(token, id, retries - 1);
+    }
     if (error instanceof Error) {
       throw error;
     }
+  }
+}
+
+function chunkArray(ids: number[], size = 10) {
+  const result = [];
+  for (let i = 0; i < ids.length; i += size) {
+    result.push(ids.slice(i, i + size));
+  }
+
+  return result;
+}
+
+/**
+ * Deletes all todos inside a batch (parallel inside the batch)
+ */
+async function deleteBatch(token: string, batch: number[]) {
+  return Promise.all(batch.map((id) => deleteTodo(token, id)));
+}
+
+/**
+ * Deletes batches one by one in queue
+ */
+export async function deleteTodosInOrder(
+  token: string,
+  selectedTodoIds: number[]
+) {
+  const batches = chunkArray(selectedTodoIds, 10);
+  for (let i = 0; i < batches.length; i++) {
+    await deleteBatch(token, batches[i]);
+
+    // if (onProgress) {
+    //   const percent = ((i + 1) / batches.length) * 100;
+    //   onProgress(percent);
+    // }
   }
 }
