@@ -17,6 +17,7 @@ export function TodoList() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortType, setSortType] = useState("createdAtAsc");
 
   const handleFetchTodos = useCallback(async () => {
     if (!isAuthenticated || !token) {
@@ -200,6 +201,44 @@ export function TodoList() {
     []
   );
 
+  const handleSortChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      setSortType(event.target.value);
+    },
+    []
+  );
+
+  useEffect(() => {
+    setTodosMap((prevTodosMap) => {
+      if (prevTodosMap.size === 0) return prevTodosMap;
+
+      const allTodos = Array.from(prevTodosMap.values());
+      const sortedTodos = [...allTodos].sort((a, b) => {
+        if (sortType === "createdAtDesc") {
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        } else if (sortType === "createdAtAsc") {
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+        } else if (sortType === "dueDateDesc") {
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+        } else if (sortType === "dueDateAsc") {
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+        return 0;
+      });
+      return new Map(sortedTodos.map((todo) => [todo.id, todo]));
+    });
+  }, [sortType]);
+
   if (isLoading) {
     return (
       <div>
@@ -229,6 +268,22 @@ export function TodoList() {
           className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
+      <div className="mt-4 mb-4">
+        <label htmlFor="sort">Sort by </label>
+        <select
+          name="sort"
+          id="sort"
+          className="p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+          onChange={handleSortChange}
+          value={sortType}
+        >
+          <option value="createdAtAsc">Created date: Oldest to Newest</option>
+          <option value="createdAtDesc">Created date: Newest to Oldest</option>
+          <option value="dueDateAsc">Due date: Oldest to Newest</option>
+          <option value="dueDateDesc">Due date: Newest to Oldest</option>
+        </select>
+      </div>
+
       <div className="flex items-center gap-[8px] flex-wrap">
         <button
           type="button"
