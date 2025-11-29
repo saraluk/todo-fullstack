@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -20,6 +21,9 @@ export class Todo {
 
   @Column({ type: "timestamptz", nullable: true })
   dueDate: Date | null;
+
+  @CreateDateColumn({ type: "timestamptz" })
+  createdAt: Date;
 
   // Foreign Key Column: Holds the ID of the owner
   @Column()
