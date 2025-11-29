@@ -145,10 +145,5 @@ export async function deleteTodosInOrder(
   const batches = chunkArray(selectedTodoIds, 10);
   for (let i = 0; i < batches.length; i++) {
     await deleteBatch(token, batches[i]);
-
-    // if (onProgress) {
-    //   const percent = ((i + 1) / batches.length) * 100;
-    //   onProgress(percent);
-    // }
   }
 }
